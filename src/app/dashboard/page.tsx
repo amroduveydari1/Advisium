@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
-import { ScoreRing } from "@/components/score-ring";
 import {
   Card,
   CardContent,

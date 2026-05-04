@@ -364,7 +364,7 @@ export function DraftPreview({ draft, accountId }: DraftPreviewProps) {
       {activeTab === "meta" && !hasMeta && (
         <div className="rounded-xl border border-dashed border-border/60 p-10 text-center">
           <p className="text-sm text-muted-foreground">No Meta campaigns generated for this setup.</p>
-          <p className="mt-1 text-xs text-muted-foreground">Change Platform Preference to "Google + Meta" and regenerate.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Change Platform Preference to &quot;Google + Meta&quot; and regenerate.</p>
         </div>
       )}
     </div>

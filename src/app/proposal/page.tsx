@@ -42,7 +42,6 @@ export default function ProposalPage() {
         logging: false,
       });
 
-      const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
       const pageWidth = pdf.internal.pageSize.getWidth();
