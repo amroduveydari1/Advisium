@@ -35,6 +35,35 @@ function GoogleAdPreview({ headline1, headline2, headline3, desc1, desc2, url }:
   );
 }
 
+function YouTubeAdPreview({ headline1, headline2, desc1, cta }: {
+  headline1: string;
+  headline2: string;
+  desc1: string;
+  cta: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border/60 bg-white/5 overflow-hidden">
+      <div className="relative h-32 bg-gradient-to-br from-red-500/20 via-orange-500/10 to-neutral-900/40">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex items-center gap-2 rounded-full bg-black/50 px-3 py-1 text-[11px] font-medium text-white">
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px]">▶</span>
+            YouTube Video Ad
+          </div>
+        </div>
+      </div>
+      <div className="space-y-1 p-4">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Video Ad Preview</p>
+        <p className="text-sm font-semibold text-red-300 leading-snug">{headline1}</p>
+        <p className="text-xs font-medium text-foreground leading-snug">{headline2}</p>
+        <p className="text-xs text-muted-foreground leading-relaxed">{desc1}</p>
+        <div className="pt-1">
+          <Badge variant="secondary" className="text-xs">{cta} →</Badge>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MetaAdPreview({ headline, primaryText, description, cta }: {
   headline: string; primaryText: string; description: string; cta: string;
 }) {
@@ -92,7 +121,7 @@ export function DraftPreview({ draft, accountId }: DraftPreviewProps) {
         <div>
           <h2 className="text-xl font-bold">Campaign Drafts</h2>
           <p className="text-sm text-muted-foreground">
-            ${draft.totalDailyBudget}/day &middot; ${draft.totalMonthlyBudget.toLocaleString()}/month &middot; {draft.campaigns.length} Google campaign{draft.campaigns.length !== 1 ? "s" : ""}{hasMeta ? ` + ${draft.metaCampaigns!.length} Meta campaign${draft.metaCampaigns!.length !== 1 ? "s" : ""}` : ""}
+            ${draft.totalDailyBudget}/day &middot; ${draft.totalMonthlyBudget.toLocaleString()}/month &middot; {draft.campaigns.length} Google (Search/Display/YouTube) campaign{draft.campaigns.length !== 1 ? "s" : ""}{hasMeta ? ` + ${draft.metaCampaigns!.length} Meta campaign${draft.metaCampaigns!.length !== 1 ? "s" : ""}` : ""}
           </p>
         </div>
         {!created ? (
@@ -214,14 +243,29 @@ export function DraftPreview({ draft, accountId }: DraftPreviewProps) {
 
                       {/* Ad Preview */}
                       {ag.headlines && ag.headlines.length >= 3 && ag.descriptions && ag.descriptions.length >= 2 && (
-                        <GoogleAdPreview
-                          headline1={ag.headlines[0]}
-                          headline2={ag.headlines[1]}
-                          headline3={ag.headlines[2]}
-                          desc1={ag.descriptions[0]}
-                          desc2={ag.descriptions[1]}
-                          url={campaign.geoTargets[0] || "example.com"}
-                        />
+                        campaign.type === "VIDEO" ? (
+                          <YouTubeAdPreview
+                            headline1={ag.headlines[0]}
+                            headline2={ag.headlines[1]}
+                            desc1={ag.descriptions[0]}
+                            cta={
+                              campaign.biddingStrategy.includes("Click")
+                                ? "Watch & Visit"
+                                : campaign.biddingStrategy.includes("Conversion")
+                                ? "Watch & Convert"
+                                : "Watch Now"
+                            }
+                          />
+                        ) : (
+                          <GoogleAdPreview
+                            headline1={ag.headlines[0]}
+                            headline2={ag.headlines[1]}
+                            headline3={ag.headlines[2]}
+                            desc1={ag.descriptions[0]}
+                            desc2={ag.descriptions[1]}
+                            url={campaign.geoTargets[0] || "example.com"}
+                          />
+                        )
                       )}
 
                       {/* Keywords */}

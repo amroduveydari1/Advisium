@@ -34,7 +34,7 @@ export default function DraftPage() {
             <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Campaign Drafts</p>
             <h1 className="text-3xl font-bold tracking-tight">Campaigns</h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              Google Ads &amp; Meta campaign structure ready for review and launch.
+              Google Search, Display, YouTube, and Meta campaign structure ready for review and launch.
             </p>
           </div>
           <Button size="sm" onClick={() => router.push("/proposal")} className="shrink-0">

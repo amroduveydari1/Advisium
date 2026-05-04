@@ -95,6 +95,14 @@ export default function DashboardPage() {
 
   if (!strategy) return null;
   const wa = strategy.websiteAnalysis;
+  const confidenceScores = strategy.confidenceScores ?? [];
+  const benchmarkInsights = strategy.benchmarkInsights;
+
+  const statusStyles: Record<string, string> = {
+    good: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+    watch: "border-yellow-500/30 bg-yellow-500/10 text-yellow-300",
+    improve: "border-red-500/30 bg-red-500/10 text-red-300",
+  };
 
   return (
     <AppShell>
@@ -270,6 +278,63 @@ export default function DashboardPage() {
             ))}
           </div>
         </section>
+
+        {/* Recommendation Confidence */}
+        {confidenceScores.length > 0 && (
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold tracking-tight">Recommendation Confidence</h2>
+            <div className="grid gap-4 md:grid-cols-4">
+              {confidenceScores.map((item) => (
+                <Card key={item.area}>
+                  <CardContent className="pt-5 space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{item.area}</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-2xl font-bold text-blue-400">{item.score}<span className="text-sm font-normal text-muted-foreground">/100</span></p>
+                      <Badge variant="outline" className="text-[10px]">
+                        {item.score >= 75 ? "High" : item.score >= 55 ? "Medium" : "Low"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{item.note}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Benchmark Insights */}
+        {benchmarkInsights?.metrics?.length > 0 && (
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold tracking-tight">Benchmark Insights</h2>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Current Performance vs. {benchmarkInsights.market} Benchmarks</CardTitle>
+                <p className="text-xs text-muted-foreground">Use this summary to explain performance quality and next actions to clients.</p>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {benchmarkInsights.metrics.map((metric) => (
+                    <div key={metric.name} className="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-semibold">{metric.name}</p>
+                        <Badge className={`text-[10px] capitalize border ${statusStyles[metric.status] || statusStyles.watch}`}>{metric.status}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Current: <span className="text-foreground">{metric.current}</span></p>
+                      <p className="text-xs text-muted-foreground">Benchmark: <span className="text-foreground">{metric.benchmark}</span></p>
+                      <p className="text-xs text-muted-foreground">{metric.explanation}</p>
+                    </div>
+                  ))}
+                </div>
+                <Separator />
+                <div className="flex flex-wrap gap-x-6 gap-y-1">
+                  {benchmarkInsights.notes.map((note, i) => (
+                    <p key={i} className="text-xs text-muted-foreground">· {note}</p>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        )}
 
         {/* Budget Allocation */}
         <section className="space-y-4">

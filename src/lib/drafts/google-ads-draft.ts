@@ -47,6 +47,51 @@ function buildGoogleDescriptions(websiteAnalysis: WebsiteAnalysis): string[] {
 	return all.slice(0, 4);
 }
 
+function buildYouTubeHeadlines(websiteAnalysis: WebsiteAnalysis): string[] {
+	const ideas = websiteAnalysis.adCopyIdeas;
+	const base = ideas[0];
+	return [
+		base?.headline1 || "Discover More Today",
+		ideas[1]?.headline1 || "See Why Customers Choose Us",
+		ideas[2]?.headline1 || "Watch & Get Started",
+		"Limited Time Offer",
+		"Shop Online Securely",
+	].slice(0, 5);
+}
+
+function normalizeBudgetSplit(totalDailyBudget: number, setup: QuickSetup): {
+	coreBudget: number;
+	retargetingBudget: number;
+	brandBudget: number;
+	youtubeBudget: number;
+} {
+	let coreBudget = Math.max(6, Math.round(totalDailyBudget * 0.5));
+	let retargetingBudget = Math.max(4, Math.round(totalDailyBudget * 0.2));
+	let youtubeBudget = Math.max(setup.goal === "awareness" ? 6 : 3, Math.round(totalDailyBudget * (setup.goal === "awareness" ? 0.25 : 0.12)));
+	let brandBudget = Math.max(3, totalDailyBudget - coreBudget - retargetingBudget - youtubeBudget);
+
+	let overflow = coreBudget + retargetingBudget + youtubeBudget + brandBudget - totalDailyBudget;
+	if (overflow > 0) {
+		const reduceCore = Math.min(overflow, Math.max(0, coreBudget - 6));
+		coreBudget -= reduceCore;
+		overflow -= reduceCore;
+	}
+	if (overflow > 0) {
+		const reduceRetargeting = Math.min(overflow, Math.max(0, retargetingBudget - 4));
+		retargetingBudget -= reduceRetargeting;
+		overflow -= reduceRetargeting;
+	}
+	if (overflow > 0) {
+		const reduceYoutube = Math.min(overflow, Math.max(0, youtubeBudget - 3));
+		youtubeBudget -= reduceYoutube;
+		overflow -= reduceYoutube;
+	}
+
+	brandBudget = Math.max(3, totalDailyBudget - coreBudget - retargetingBudget - youtubeBudget);
+
+	return { coreBudget, retargetingBudget, brandBudget, youtubeBudget };
+}
+
 function buildSitelinkExtensions(setup: QuickSetup): string[] {
 	if (setup.goal === "sales") {
 		return ["Shop New Arrivals", "Sale & Offers", "Track My Order", "Return Policy"];
@@ -185,14 +230,13 @@ export function generateCampaignDraft(
 	websiteAnalysis: WebsiteAnalysis,
 ): CampaignDraft {
 	const totalDailyBudget = Math.max(10, Math.round(setup.monthlyBudget / 30));
-	const coreBudget = Math.max(6, Math.round(totalDailyBudget * 0.6));
-	const retargetingBudget = Math.max(4, Math.round(totalDailyBudget * 0.25));
-	const brandBudget = Math.max(3, totalDailyBudget - coreBudget - retargetingBudget);
+	const { coreBudget, retargetingBudget, brandBudget, youtubeBudget } = normalizeBudgetSplit(totalDailyBudget, setup);
 
 	const topLandingPage = [...ga4.topLandingPages].sort((a, b) => b.conversions - a.conversions)[0];
 	const activeCampaigns = ads.campaigns.filter((campaign) => campaign.status === "ENABLED").length;
 
 	const headlines = buildGoogleHeadlines(websiteAnalysis, setup, country);
+	const youtubeHeadlines = buildYouTubeHeadlines(websiteAnalysis);
 	const descriptions = buildGoogleDescriptions(websiteAnalysis);
 	const sitelinks = buildSitelinkExtensions(setup);
 	const callouts = buildCalloutExtensions(websiteAnalysis, country);
@@ -324,6 +368,42 @@ export function generateCampaignDraft(
 				"Brand campaign protects against competitor bidding on your brand name",
 				"Keep CPCs low with high Quality Scores from high relevance",
 				"Monitor impression share — ensure you own 90%+ of your brand terms",
+			],
+			sitelinkExtensions: sitelinks.slice(0, 2),
+			calloutExtensions: callouts.slice(0, 4),
+		},
+		{
+			name: `YouTube | Video | ${country.code} | ${setup.goal.toUpperCase()}`,
+			type: "VIDEO",
+			dailyBudget: youtubeBudget,
+			biddingStrategy: setup.goal === "awareness"
+				? "Target CPM"
+				: setup.goal === "traffic"
+				? "Maximize Clicks"
+				: "Maximize Conversions",
+			geoTargets: [country.name],
+			language: getLanguage(country),
+			adGroups: [
+				{
+					name: "YouTube In-Stream + Shorts",
+					audienceSignals: [
+						"Custom intent from high-intent search terms",
+						"Website visitors (last 30 days)",
+						"In-market audiences aligned with product category",
+						"Similar audiences from converters",
+					],
+					headlines: youtubeHeadlines,
+					descriptions: [
+						(descriptions[0] || "Discover why customers choose us.").slice(0, 90),
+						(descriptions[1] || "Watch now and get started in minutes.").slice(0, 90),
+					],
+				},
+			],
+			notes: [
+				"Use skippable in-stream + Shorts placements for efficient reach and engagement",
+				"Start with 15-30 second creatives and test first 5-second hooks aggressively",
+				"Exclude converters from prospecting video audiences",
+				"Primary CTA should match landing page objective to preserve conversion intent",
 			],
 			sitelinkExtensions: sitelinks.slice(0, 2),
 			calloutExtensions: callouts.slice(0, 4),

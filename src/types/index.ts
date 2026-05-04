@@ -247,6 +247,26 @@ export interface StrategyScores {
 	marketDifficulty: StrategyScore;
 }
 
+export interface BenchmarkMetricInsight {
+	name: string;
+	current: string;
+	benchmark: string;
+	status: "good" | "watch" | "improve";
+	explanation: string;
+}
+
+export interface BenchmarkInsights {
+	market: string;
+	metrics: BenchmarkMetricInsight[];
+	notes: string[];
+}
+
+export interface RecommendationConfidence {
+	area: string;
+	score: number;
+	note: string;
+}
+
 export interface CampaignDraftAdGroup {
 	name: string;
 	keywords?: string[];
@@ -308,6 +328,8 @@ export interface StrategyOutput {
 		allocations: BudgetAllocation[];
 		notes: string[];
 	};
+	benchmarkInsights: BenchmarkInsights;
+	confidenceScores: RecommendationConfidence[];
 	landingPageNotes: StrategySection;
 	risks: RiskWarning[];
 	optimizationRoadmap: RoadmapPhase[];

@@ -17,6 +17,8 @@ import {
   AdCopyIdea,
   ProposalData,
   ProposalPhase,
+  BenchmarkInsights,
+  RecommendationConfidence,
 } from "@/types";
 import { getCountryProfile, CountryProfile } from "@/lib/countries";
 import { calculateScores, getBudgetTier } from "./scoring";
@@ -30,6 +32,10 @@ function si(text: string, type?: StrategyItem["type"]): StrategyItem {
 
 function sec(title: string, icon: string, items: StrategyItem[]): StrategySection {
   return { title, icon, items };
+}
+
+function clampScore(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value)));
 }
 
 function buildOutcomeProjection(
@@ -341,6 +347,126 @@ function buildBudgetAnalysis(
   }
 
   return { allocations, notes };
+}
+
+function buildBenchmarkInsights(
+  setup: QuickSetup,
+  ga4: GA4Report,
+  ads: AdsReport,
+  country: CountryProfile,
+): BenchmarkInsights {
+  const currentCtr = ads.avgCtr;
+  const ctrBenchmark = setup.goal === "awareness" ? 1.5 : setup.goal === "traffic" ? 2.0 : 3.5;
+
+  const currentCpc = ads.avgCpc;
+  const cpcBenchmark = country.avgCpcSearch;
+
+  const estimatedClicks = currentCpc > 0 ? ads.totalSpend30d / currentCpc : 0;
+  const cvr = estimatedClicks > 0 ? (ads.totalConversions30d / estimatedClicks) * 100 : 0;
+  const cvrBenchmark = setup.goal === "sales" ? 2.0 : setup.goal === "leads" ? 4.0 : 1.5;
+
+  const cpa = ads.totalConversions30d > 0 ? ads.totalSpend30d / ads.totalConversions30d : 0;
+  const cpaBenchmark = setup.goal === "sales" ? country.avgCpcSearch * 25 : country.avgCpcSearch * 18;
+
+  const bounceRate = ga4.engagement.bounceRate * 100;
+  const bounceBenchmark = 45;
+
+  const metrics: BenchmarkInsights["metrics"] = [
+    {
+      name: "CTR",
+      current: `${currentCtr.toFixed(1)}%`,
+      benchmark: `${ctrBenchmark.toFixed(1)}%+`,
+      status: currentCtr >= ctrBenchmark ? "good" : currentCtr >= ctrBenchmark * 0.7 ? "watch" : "improve",
+      explanation: "Measures ad-message relevance. Higher CTR usually means stronger audience fit.",
+    },
+    {
+      name: "CPC",
+      current: `$${currentCpc.toFixed(2)}`,
+      benchmark: `$${cpcBenchmark.toFixed(2)} avg`,
+      status: currentCpc <= cpcBenchmark ? "good" : currentCpc <= cpcBenchmark * 1.25 ? "watch" : "improve",
+      explanation: "Shows traffic efficiency. Lower CPC gives more clicks from the same budget.",
+    },
+    {
+      name: "Conversion Rate",
+      current: `${cvr.toFixed(1)}%`,
+      benchmark: `${cvrBenchmark.toFixed(1)}%+`,
+      status: cvr >= cvrBenchmark ? "good" : cvr >= cvrBenchmark * 0.7 ? "watch" : "improve",
+      explanation: "Indicates how well clicks turn into leads or sales.",
+    },
+    {
+      name: "CPA",
+      current: cpa > 0 ? `$${cpa.toFixed(2)}` : "n/a",
+      benchmark: `$${cpaBenchmark.toFixed(2)} target`,
+      status: cpa === 0 ? "watch" : cpa <= cpaBenchmark ? "good" : cpa <= cpaBenchmark * 1.2 ? "watch" : "improve",
+      explanation: "Tracks acquisition cost. Lower CPA improves profitability.",
+    },
+    {
+      name: "Bounce Rate",
+      current: `${bounceRate.toFixed(0)}%`,
+      benchmark: `< ${bounceBenchmark}%`,
+      status: bounceRate <= bounceBenchmark ? "good" : bounceRate <= 55 ? "watch" : "improve",
+      explanation: "Reflects landing-page quality and audience-message alignment.",
+    },
+  ];
+
+  const notes = [
+    `Benchmarks are adapted for ${country.name} market cost levels and your ${setup.goal} goal.`,
+    "Use this section to explain performance health to clients before scaling spend.",
+    "Targets should be reviewed every 30 days as account data quality improves.",
+  ];
+
+  return { market: country.name, metrics, notes };
+}
+
+function buildConfidenceScores(
+  setup: QuickSetup,
+  ga4: GA4Report,
+  ads: AdsReport,
+  scores: StrategyOutput["scores"],
+): RecommendationConfidence[] {
+  const hasConversionEvent = ga4.keyEvents.some((e) => e.name === "purchase" || e.name === "generate_lead");
+  const activeCampaigns = ads.campaigns.filter((c) => c.status === "ENABLED").length;
+
+  const trackingConfidence = clampScore(
+    35 +
+    (hasConversionEvent ? 40 : 0) +
+    (ads.totalConversions30d > 20 ? 20 : ads.totalConversions30d > 0 ? 10 : 0)
+  );
+
+  const platformConfidence = clampScore(
+    45 +
+    (ga4.totalSessions > 5000 ? 20 : ga4.totalSessions > 1000 ? 10 : 0) +
+    (activeCampaigns > 0 ? 20 : 0) +
+    (setup.platformPreference === "auto" ? 0 : 10)
+  );
+
+  const budgetConfidence = clampScore(35 + scores.budgetRealism.score * 0.65);
+  const forecastConfidence = clampScore((trackingConfidence * 0.45) + (budgetConfidence * 0.3) + (platformConfidence * 0.25));
+
+  return [
+    {
+      area: "Tracking Reliability",
+      score: trackingConfidence,
+      note: hasConversionEvent
+        ? "Conversion events are available, which improves optimization accuracy."
+        : "Missing or weak conversion tracking lowers confidence in optimization decisions.",
+    },
+    {
+      area: "Platform Recommendation",
+      score: platformConfidence,
+      note: "Confidence is based on traffic volume, campaign history, and setup preference signals.",
+    },
+    {
+      area: "Budget Fit",
+      score: budgetConfidence,
+      note: "Higher confidence means current budget can support consistent testing and learning.",
+    },
+    {
+      area: "Performance Forecast",
+      score: forecastConfidence,
+      note: "Forecast confidence combines tracking quality, budget realism, and available account data.",
+    },
+  ];
 }
 
 // ─── Risks ──────────────────────────────────────────────────────────────────
@@ -1250,6 +1376,8 @@ export function generateStrategy(
   const launchPhases = buildLaunchPhases(setup, country, tier);
   const socialMediaPlan = buildSocialMediaPlan(setup, country);
   const websiteAnalysis = buildWebsiteAnalysis(setup, ga4, country);
+  const benchmarkInsights = buildBenchmarkInsights(setup, ga4, ads, country);
+  const confidenceScores = buildConfidenceScores(setup, ga4, ads, scores);
   const draft = generateCampaignDraft(setup, ga4, ads, country, campaignType.type, websiteAnalysis);
   const proposal = buildProposal(setup, country, platform.platform, launchPhases, websiteAnalysis);
 
@@ -1282,6 +1410,8 @@ export function generateStrategy(
     marketAssessment: market,
     campaignArchitecture: architecture,
     budgetAnalysis: budget,
+    benchmarkInsights,
+    confidenceScores,
     landingPageNotes: landingPages,
     risks,
     optimizationRoadmap: roadmap,
