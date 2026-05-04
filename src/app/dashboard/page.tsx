@@ -21,6 +21,57 @@ const PRIORITY_COLORS: Record<string, string> = {
   low: "border-blue-500/30 bg-blue-500/5",
 };
 
+const MARKETING_METRICS = [
+  {
+    term: "CTR (Click-Through Rate)",
+    simple: "How often people click after seeing your ad.",
+    whyItMatters: "Higher CTR usually means your message is relevant.",
+    formula: "Clicks / Impressions",
+  },
+  {
+    term: "CPC (Cost Per Click)",
+    simple: "The average amount you pay for one click.",
+    whyItMatters: "Lower CPC helps you get more traffic with the same budget.",
+    formula: "Spend / Clicks",
+  },
+  {
+    term: "CVR (Conversion Rate)",
+    simple: "How many visitors complete your goal after clicking.",
+    whyItMatters: "Shows how well your landing page turns traffic into results.",
+    formula: "Conversions / Clicks",
+  },
+  {
+    term: "CPA (Cost Per Acquisition)",
+    simple: "How much you pay to get one lead or sale.",
+    whyItMatters: "A key profitability metric for paid campaigns.",
+    formula: "Spend / Conversions",
+  },
+  {
+    term: "ROAS (Return on Ad Spend)",
+    simple: "Revenue generated for every $1 spent on ads.",
+    whyItMatters: "Directly shows if your campaigns are profitable.",
+    formula: "Revenue / Ad Spend",
+  },
+  {
+    term: "CPM (Cost Per 1,000 Impressions)",
+    simple: "What you pay for 1,000 ad views.",
+    whyItMatters: "Useful for awareness and reach-focused campaigns.",
+    formula: "(Spend / Impressions) × 1000",
+  },
+  {
+    term: "Impression Share",
+    simple: "The percentage of times your ad appeared when it could have appeared.",
+    whyItMatters: "Helps reveal lost opportunities due to budget or ranking.",
+    formula: "Impressions / Eligible Impressions",
+  },
+  {
+    term: "Bounce Rate",
+    simple: "The percentage of visitors who leave without interacting.",
+    whyItMatters: "High bounce rate can mean poor page fit or weak content.",
+    formula: "Single-Page Sessions / Total Sessions",
+  },
+] as const;
+
 function ScoreBar({ value }: { value: number }) {
   const color = value >= 70 ? "bg-emerald-500" : value >= 45 ? "bg-yellow-500" : "bg-red-500";
   return (
@@ -243,6 +294,31 @@ export default function DashboardPage() {
               <div className="flex flex-wrap gap-x-6 gap-y-1">
                 {strategy.budgetAnalysis.notes.map((note, i) => (
                   <p key={i} className="text-xs text-muted-foreground">· {note}</p>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Marketing Metrics Explained */}
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold tracking-tight">Marketing Metrics Explained</h2>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Simple KPI Glossary</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                A quick guide to understand campaign performance terms in plain language.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {MARKETING_METRICS.map((metric) => (
+                  <div key={metric.term} className="rounded-lg border border-border/60 bg-muted/20 p-3">
+                    <p className="text-xs font-semibold text-foreground">{metric.term}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{metric.simple}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Why it matters: {metric.whyItMatters}</p>
+                    <p className="mt-1.5 text-[11px] font-medium text-blue-400">Formula: {metric.formula}</p>
+                  </div>
                 ))}
               </div>
             </CardContent>
