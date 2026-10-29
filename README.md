@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Advisium
 
-## Getting Started
+**Marketing strategy and campaign planning prototype.**
 
-First, run the development server:
+Advisium turns a business goal, target market and advertising budget into a structured marketing plan. It includes a strategy dashboard, campaign draft views and downloadable client proposals.
+
+## What it includes
+
+- Quick setup for website, country, campaign goal and monthly budget
+- Rule-based strategy generation, scoring and budget projections
+- Marketing dashboard with recommendations and performance concepts
+- Campaign planning and drafts
+- Client proposal export to PDF
+
+## Built with
+
+Next.js 14, React, TypeScript, Tailwind CSS and API routes. Proposal export uses html2canvas and jsPDF.
+
+## How it works
+
+`Setup → Strategy API → Rule-based strategy engine → Dashboard → Campaign drafts / PDF proposal`
+
+The strategy code lives under `src/lib/strategy/`. API routes are under `src/app/api/`; the proposal UI is in `src/app/proposal/`.
+
+## Run locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000/setup`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Current status
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Prototype / portfolio project.** The strategy API currently passes demo credentials to analytics and ads integration functions. Live Google Analytics and Ads account connectivity must be validated separately; this README does not claim production integration. Budget and outcome projections are assumptions-based estimates, not guarantees.
 
-## Learn More
+## Engineering next steps
 
-To learn more about Next.js, take a look at the following resources:
+- Validate actual account authorization and separate demo data clearly from real data
+- Add unit tests for strategy scoring and budget calculations
+- Strengthen request validation and failure handling
+- Verify build, lint and TypeScript checks
+- Add screenshots and a working demo after verification
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Author
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[Amro Duveydari](https://github.com/amroduveydari1)
